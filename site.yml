@@ -1,0 +1,159 @@
+# =======================================================
+# Play 1: Setup ClickHouse (Placeholder)
+# =======================================================
+- name: 01 - Setup ClickHouse
+  hosts: clickhouse_host
+  become: true
+  tags:
+    - clickhouse
+
+  tasks:
+    - name: Ensure environment is ready (install ca-certificates)
+      ansible.builtin.apt:
+        name: ca-certificates
+        state: present
+        update_cache: true
+      tags:
+        - setup
+        - core
+
+    - name: Placeholder task for ClickHouse installation
+      ansible.builtin.debug:
+        msg: "ClickHouse will be installed here, listening on internal IP: {{ hostvars['clickhouse_host']['internal_ip'] }}"
+      tags:
+        - setup
+        - core
+
+# =======================================================
+# Play 2: Setup Vector (Placeholder)
+# =======================================================
+- name: 02 - Setup Vector
+  hosts: vector_host
+  become: true 
+  vars:
+
+    clickhouse_db_host: "{{ hostvars['clickhouse_host']['internal_ip'] }}"
+  tags:
+    - vector
+
+  tasks:
+    - name: Placeholder task for Vector installation
+      ansible.builtin.debug:
+        msg: "Vector will be configured to send data to ClickHouse at: {{ clickhouse_db_host }}"
+      tags:
+        - setup
+        - core
+
+# =======================================================
+# Play 3: Setup LightHouse UI with Nginx
+# =======================================================
+- name: 03 - Setup LightHouse UI using Nginx
+  hosts: lighthouse_host
+  become: true
+  vars:
+
+    lighthouse_root_dir: /var/www/lighthouse
+
+    clickhouse_db_host: "{{ hostvars['clickhouse_host']['internal_ip'] }}"
+  tags:
+    - lighthouse
+
+  tasks:
+    - name: Install required packages (Nginx, Git)
+      ansible.builtin.package:
+        name:
+          - nginx
+          - git
+        state: present
+        update_cache: true
+      tags:
+        - install
+
+    - name: Create destination directory for Lighthouse
+      ansible.builtin.file:
+        path: "{{ lighthouse_root_dir }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+      tags:
+        - setup
+
+    - name: Add Lighthouse directory to Git safe list
+      ansible.builtin.command:
+        cmd: git config --global --add safe.directory {{ lighthouse_root_dir }}
+      changed_when: false
+      tags:
+        - setup
+
+    - name: Remove existing lighthouse directory before download
+      ansible.builtin.file:
+        path: "{{ lighthouse_root_dir }}"
+        state: absent
+      tags:
+        - download
+
+    - name: Download LightHouse static files
+      ansible.builtin.git:
+        repo: 'https://github.com/Dmitriy-py/lighthouse.git'
+        dest: "{{ lighthouse_root_dir }}"
+        version: master
+      tags:
+        - download
+
+    - name: Configure Lighthouse app.js with the correct ClickHouse host IP (internal)
+      ansible.builtin.replace:
+        path: "{{ lighthouse_root_dir }}/app.js"
+        regexp: |
+          ^db_host = prompt\('Host:', 'http://127\.0\.0\.1:8123/'\);$
+        replace: 'http://{{ clickhouse_db_host }}:8123/'
+        backup: true
+      tags:
+        - configure
+
+    - name: Copy Nginx configuration file for Lighthouse
+      ansible.builtin.template:
+        src: templates/nginx_lighthouse.conf.j2
+        dest: /etc/nginx/sites-available/ lighthouse.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart nginx
+      tags:
+        - configure
+
+    - name: Enable Lighthouse Nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/ lighthouse.conf
+        dest: /etc/nginx/sites-enabled/ lighthouse.conf
+        state: link
+      when: not ansible_check_mode
+      notify: Restart nginx
+      tags:
+        - configure
+
+    - name: Remove default Nginx site configuration
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      failed_when: false
+      when: not ansible_check_mode
+      notify: Restart nginx
+      tags:
+        - configure
+
+    - name: Ensure Nginx service is running and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+      when: not ansible_check_mode
+      tags:
+        - service
+
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+      when: not ansible_check_mode

@@ -14,7 +14,9 @@ __pycache__/
 .git/
 .gitattributes
 .terraform/
-terraform.tfstate*
+terraform.tfstate
+*.tfstate
+authorized_key.json
 .terraform.lock.hcl
 *.swp
 *~

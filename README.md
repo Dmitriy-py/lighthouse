@@ -1,27 +1,25 @@
-# LightHouse
-LightHouse is a lightweight GUI interface for ClickHouse. Do not confuse it with LightHouse from Google (https://github.com/GoogleChrome/lighthouse). Interface is inspired by Sequel Pro (https://www.sequelpro.com/).
+# Домашнее задание к занятию 3 «Использование Ansible»
 
-# Usage
-Just clone this repository and use index.html in your browser.
-If you need to specify username (e.g. XXX), then add "/?user=XXX" to your URL, e.g. "http://127.0.0.1:8123/?user=XXX".
-If you want to force basic auth instead of URL-based (basic auth does not work with CORS, be careful), then add "/?basic_user=XXX" instead.
+## ` Дмитрий Климов `
 
-# Features
-You can do the following using LightHouse:
+1. Допишите playbook: нужно сделать ещё один play, который устанавливает и настраивает LightHouse.
+2. При создании tasks рекомендую использовать модули: get_url, template, yum, apt.
+3. Tasks должны: скачать статику LightHouse, установить Nginx или любой другой веб-сервер, настроить его конфиг для открытия       LightHouse, запустить веб-сервер.
+4. Подготовьте свой inventory-файл prod.yml.
+5. Запустите ansible-lint site.yml и исправьте ошибки, если они есть.
+6. Попробуйте запустить playbook на этом окружении с флагом --check.
+7. Запустите playbook на prod.yml окружении с флагом --diff. Убедитесь, что изменения на системе произведены.
+8. Повторно запустите playbook с флагом --diff и убедитесь, что playbook идемпотентен.
+9. Подготовьте README.md-файл по своему playbook. В нём должно быть описано: что делает playbook, какие у него есть параметры и    теги.
+10. Готовый playbook выложите в свой репозиторий, поставьте тег 08-ansible-03-yandex на фиксирующий коммит, в ответ                 предоставьте ссылку на него.
 
-1. See tables list, filter it
-2. See table size on disk and estimated number of rows
-3. See table contents with filters and sorting
-4. Execute read-only queries in SQL editor
+## Ответ:
 
-That's it! It is not meant to be a full-fledged replacement for tabix, for example.
+# Проект "Развертывание Мониторинговой Системы"
 
-# License
+Этот проект демонстрирует использование Ansible для автоматизации развертывания компонентов системы мониторинга: ClickHouse (placeholder), Vector (placeholder) и LightHouse UI с Nginx.
 
-MIT License.
-Based on:
+## Структура проекта
 
-- AG Grid https://www.ag-grid.com/
-- ACE editor https://ace.c9.io/
-- jQuery https://jquery.org/
-- Tabix patches for ACE Editor https://github.com/tabixio/tabix
+├── ansible/ │ ├── lighthouse/ │ │ ├── .gitignore │ │ ├── prod.yml # Inventory file │ │ ├── site.yml # Основной Ansible Playbook │ │ ├── templates/ │ │ │ └── nginx_lighthouse.conf.j2 # Шаблон конфигурации Nginx │ │ ├── host_vars/ │ │ │ └── clickhouse_host.yml # Переменные для clickhouse_host (internal_ip) │ │ └── venv/ # Виртуальное окружение Python │ └── README.md # Описание проекта Ansible ├── terraform/ │ └── … # Terraform конфигурация (для инфраструктуры) └── README.md # Основной README проекта
+
